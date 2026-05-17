@@ -61,4 +61,15 @@ class EpsilonGreedyPolicy(object):
         # With prob 1 - epsilon return the greedy action
         # Wtih prob epsilon, use the policy's RNG to select a random action
         # Return the selected action -- currently always returns 0
+
+        if self.rng.random() < self.epsilon:
+            # Explore: sample a uniformly random action using the policy's own RNG
+            return int(self.rng.integers(self.env.action_space.n))
+        else:
+            # Exploit: pick the greedy action (random tie-breaking)
+            q_values = Q[state]
+            max_q = np.max(q_values)
+            best_actions = np.where(q_values == max_q)[0]
+            return int(self.rng.choice(best_actions))
+
         return 0  # uncomment to run the solution

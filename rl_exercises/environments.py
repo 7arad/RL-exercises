@@ -189,6 +189,13 @@ class MarsRover(gym.Env):
             The resulting state.
         """
         # TODO: Implement the environment dynamics to determine the next state
+
+        if action == 0:
+            return max(0, state - 1)
+        elif action == 1:
+            return min(self.observation_space.n - 1, state + 1)
+        else:
+            raise RuntimeError(f"{action} is not a valid action (needs to be 0 or 1)")
         return state
 
     def get_transition_matrix(
@@ -222,6 +229,16 @@ class MarsRover(gym.Env):
         T = np.zeros((nS, nA, nS), dtype=float)
         # TODO: Determine the transition matrix using the get_next_state function
         # and the transition probabilities P.
+
+        for s in S:
+            for a in A:
+                p_follow = float(P[s, a])
+
+                next_follow = self.get_next_state(s, a)
+                next_flip = self.get_next_state(s, 1 - a)
+
+                T[s, a, next_follow] += p_follow
+                T[s, a, next_flip] += 1.0 - p_follow
 
         return T
 

@@ -1,0 +1,14 @@
+Replay Buffer Capacity (buf500 / buf2k / buf10k / buf50k):
+- Small buffers (500) lead to significantly lower and less stable mean reward (~120 at 20k frames),
+  since the agent keeps re-sampling the same recent, correlated transitions.
+- Medium to large buffers (2k–50k) all reach ~200–230 reward, with buf50k converging fastest
+  and most stably due to greater transition diversity.
+- Very large buffers do not hurt here; they provide more decorrelated samples without forgetting
+  useful early experience within 20k frames.
+
+Batch Size (16 / 32 / 64 / 128):
+- All batch sizes reach similar final performance (~160–200 at 20k frames).
+- Smaller batches (16, 32) learn slightly faster early on but show higher variance across seeds.
+- Larger batches (128) are noisier in the mid-to-late training phase (large std band after 15k frames),
+  likely due to high learning rate relative to batch size.
+- Batch 32 offers the best balance of speed and stability.

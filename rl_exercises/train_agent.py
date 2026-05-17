@@ -59,9 +59,34 @@ def train(cfg: DictConfig) -> float:
         return train_sb3(env, cfg)
     elif cfg.agent == "random":
         agent = RandomAgent(env)
-    else:
+
         # TODO: add your agent options here
-        raise NotImplementedError
+        # raise NotImplementedError
+
+    elif cfg.agent == "policy_iteration":
+        agent = PolicyIteration(env=env, **cfg.agent_kwargs)
+        agent.update_agent()
+    elif cfg.agent == "value_iteration":
+        agent = ValueIteration(env=env, **cfg.agent_kwargs)
+        agent.update_agent()
+    elif cfg.agent in ("sarsa", "qlearning"):
+        from rl_exercises.week_3 import EpsilonGreedyPolicy
+        from rl_exercises.week_3 import TDAgent
+
+        policy = EpsilonGreedyPolicy(
+            env=env,
+            epsilon=cfg.agent_kwargs.get("epsilon", 0.1),
+            seed=cfg.seed,
+        )
+        agent = TDAgent(
+            env=env,
+            policy=policy,
+            alpha=cfg.agent_kwargs.get("alpha", 0.5),
+            gamma=cfg.agent_kwargs.get("gamma", 1.0),
+            algorithm=cfg.agent,  # "sarsa" or "qlearning"
+        )
+    else:
+        raise NotImplementedError(f"Unknown agent: {cfg.agent}")
 
     buffer_cls = eval(cfg.buffer_cls)
     buffer = buffer_cls(**cfg.buffer_kwargs)
@@ -87,7 +112,8 @@ def train(cfg: DictConfig) -> float:
 
         if terminated or truncated:
             state, info = env.reset(seed=cfg.seed)
-
+            if hasattr(agent, "policy") and hasattr(agent.policy, "epsilon"):
+                agent.policy.epsilon = max(0.01, agent.policy.epsilon * 0.995)
         if step % cfg.eval_every_n_steps == 0:
             eval_performance = evaluate(
                 make_env(cfg.env_name, cfg.env_kwargs),
